@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import TasksView from '@/components/views/TasksView'
 
 export const dynamic = 'force-dynamic'
@@ -40,7 +40,7 @@ export default async function TasksPage() {
   ])
 
   const rawTasks = tasksResult.data ?? []
-  const projects = projectsResult.data ?? []
+  const projects = (projectsResult.data ?? []) as Array<{ id: string; name: string }>
 
   // Build project lookup map
   const projectMap: Record<string, string> = {}
@@ -49,7 +49,8 @@ export default async function TasksPage() {
   }
 
   // Join project names onto tasks
-  const tasks = rawTasks.map((t) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tasks = (rawTasks as any[]).map((t) => ({
     ...t,
     project_name: t.project_id ? (projectMap[t.project_id] ?? null) : null,
   }))

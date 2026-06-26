@@ -8,7 +8,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  defs,
 } from 'recharts'
 
 interface AreaTrendChartProps {

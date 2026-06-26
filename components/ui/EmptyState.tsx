@@ -1,7 +1,9 @@
 'use client'
 
+import React from 'react'
+
 interface EmptyStateProps {
-  icon: string
+  icon: React.ReactNode | string
   title: string
   description: string
   className?: string

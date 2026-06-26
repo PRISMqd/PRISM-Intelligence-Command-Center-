@@ -21,7 +21,8 @@ type ProvenanceEvent = Tables<'provenance_events'>
 
 // ─── Icon map ────────────────────────────────────────────────────────────────
 
-const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
   User, Building2, Package, FileCheck, Microscope, BookOpen,
   GitBranch, HelpCircle, Eye, AlertTriangle, CheckSquare, Folder,
   BarChart2, FlaskConical, FileText, Ghost, Zap, Bot,
@@ -134,7 +135,8 @@ function DetailPanel({ object, onClose }: DetailPanelProps) {
     ]).then(async ([relResult, provResult]) => {
       setProvenanceEvents(provResult.data ?? [])
       // Collect linked IDs
-      const linkedIds = (relResult.data ?? []).map((r) =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const linkedIds = ((relResult.data ?? []) as any[]).map((r) =>
         r.source_object_id === object.id ? r.target_object_id : r.source_object_id
       )
       if (linkedIds.length > 0) {

@@ -20,7 +20,7 @@ function getDismissed(): Set<string> {
 
 function saveDismissed(ids: Set<string>) {
   try {
-    localStorage.setItem(DISMISSED_KEY, JSON.stringify([...ids]))
+    localStorage.setItem(DISMISSED_KEY, JSON.stringify(Array.from(ids)))
   } catch {
     // ignore
   }

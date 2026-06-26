@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import DecisionsView from '@/components/views/DecisionsView'
 
 export const dynamic = 'force-dynamic'
@@ -37,11 +37,12 @@ export default async function DecisionsPage() {
     .order('created_at', { ascending: false })
 
   // Normalise: count alternatives
-  const decisions = (decisionsRaw ?? []).map((d) => {
-    const { alternatives, ...rest } = d as typeof d & { alternatives: { id: string }[] | null }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const decisions = (decisionsRaw ?? []).map((d: any) => {
+    const { alternatives, ...rest } = d
     return {
       ...rest,
-      alternatives_count: (alternatives ?? []).length,
+      alternatives_count: ((alternatives as { id: string }[] | null) ?? []).length,
     }
   })
 

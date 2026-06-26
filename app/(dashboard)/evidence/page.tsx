@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import EvidenceView from '@/components/views/EvidenceView'
 
 export const dynamic = 'force-dynamic'
@@ -53,7 +53,7 @@ export default async function EvidencePage() {
   // Build linked claim counts: evidence can appear with multiple claim_ids
   // Since schema has claim_id per row, we need to group by object_id or just count distinct claim_ids per evidence id
   const claimCountMap: Record<string, number> = {}
-  for (const row of claimLinksResult.data ?? []) {
+  for (const row of (claimLinksResult.data ?? []) as Array<{ id: string; claim_id: string | null }>) {
     if (row.claim_id) {
       claimCountMap[row.id] = (claimCountMap[row.id] ?? 0) + 1
     }
@@ -68,7 +68,8 @@ export default async function EvidencePage() {
   let qualitySum = 0
   let qualityCount = 0
 
-  for (const ev of rawEvidence) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const ev of rawEvidence as any[]) {
     const dateStr = ev.data_collection_date ?? ev.collected_at ?? ev.created_at
     if (dateStr) {
       const age = now - new Date(dateStr).getTime()

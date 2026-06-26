@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import SystemHealthView from '@/components/views/SystemHealthView'
 
 export const dynamic = 'force-dynamic'

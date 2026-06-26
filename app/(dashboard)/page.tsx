@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import FounderBriefPanel from '@/components/panels/FounderBriefPanel'
 import OrgHealthPanel from '@/components/panels/OrgHealthPanel'
 import ActivityFeedPanel from '@/components/panels/ActivityFeedPanel'
@@ -37,7 +37,7 @@ export default async function TodayPage() {
     ])
 
   const brief = briefResult.data ?? null
-  const orgHealthMetrics = metricsResult.data ?? null
+  const orgHealthMetrics = (metricsResult.data ?? []) as import('@/lib/types').OrgHealthDimension[]
   const provenanceEvents = eventsResult.data ?? []
   const ghostNotes = ghostNotesResult.data ?? []
 
@@ -46,13 +46,13 @@ export default async function TodayPage() {
       {/* Left column */}
       <div className="col-span-4 flex flex-col gap-6">
         <FounderBriefPanel brief={brief} />
-        <AlertQueuePanel events={provenanceEvents} />
+        <AlertQueuePanel />
       </div>
 
       {/* Center column */}
       <div className="col-span-5 flex flex-col gap-6">
         <OrgHealthPanel metrics={orgHealthMetrics} />
-        <ActivityFeedPanel events={provenanceEvents} />
+        <ActivityFeedPanel initialEvents={provenanceEvents as any} />
       </div>
 
       {/* Right column */}

@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import UnknownsView from '@/components/views/UnknownsView'
 
 export const dynamic = 'force-dynamic'

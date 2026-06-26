@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import ObjectsView from '@/components/views/ObjectsView'
 import type { ObjectType } from '@/lib/types'
 
@@ -51,8 +51,8 @@ export default async function ObjectsPage({
 
   // Aggregate counts by type client-side from the counts query
   const typeCounts: Record<string, number> = {}
-  for (const row of countsResult.data ?? []) {
-    const t = row.object_type as string
+  for (const row of (countsResult.data ?? []) as Array<{ object_type: string | null }>) {
+    const t = (row.object_type ?? 'unknown') as string
     typeCounts[t] = (typeCounts[t] ?? 0) + 1
   }
 

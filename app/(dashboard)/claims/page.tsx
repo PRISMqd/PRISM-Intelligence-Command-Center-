@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import ClaimsView from '@/components/views/ClaimsView'
 import type { ClaimStatus } from '@/lib/types'
 
@@ -36,7 +36,7 @@ export default async function ClaimsPage() {
     contested: 0,
     unknown: 0,
   }
-  for (const row of statusResult.data ?? []) {
+  for (const row of (statusResult.data ?? []) as Array<{ status: string | null }>) {
     const s = (row.status ?? 'unknown') as ClaimStatus
     if (s in statusCounts) {
       statusCounts[s]++

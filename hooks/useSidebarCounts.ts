@@ -112,8 +112,8 @@ async function fetchSidebarCounts(): Promise<SidebarCounts> {
     highEVIUnknowns: unknownsResult.count ?? 0,
     overdueTasks: tasksResult.count ?? 0,
     criticalRisks: risksResult.count ?? 0,
-    currentMRR: mrrResult.data?.value ?? null,
-    raiScore: raiResult.data?.value ?? null,
+    currentMRR: (mrrResult.data as { value?: number } | null)?.value ?? null,
+    raiScore: (raiResult.data as { value?: number } | null)?.value ?? null,
   }
 }
 

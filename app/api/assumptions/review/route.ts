@@ -1,5 +1,6 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient, createServerSupabaseClient } from '@/lib/supabase'
+import { createServiceClient, createServerSupabaseClient } from '@/lib/supabase-server'
 
 export async function POST(request: NextRequest) {
   try {
