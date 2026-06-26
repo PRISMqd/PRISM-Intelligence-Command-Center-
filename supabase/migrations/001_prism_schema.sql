@@ -1,0 +1,1 @@
+-- Run the full schema from the PRISM Architecture Specification SQL document provided separately.
