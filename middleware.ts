@@ -1,48 +1,25 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  try {
-    let supabaseResponse = NextResponse.next({ request })
+// Auth is enforced in app/(dashboard)/layout.tsx via createServerSupabaseClient.
+// Middleware only handles the simple cookie-presence redirect to avoid a flash.
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.next()
-    }
-
-    const supabase = createServerClient(supabaseUrl, supabaseKey, {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    })
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user && !request.nextUrl.pathname.startsWith('/login')) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
-    }
-
-    return supabaseResponse
-  } catch {
-    // If middleware fails (e.g. Supabase unreachable), allow request through.
-    // Auth is still enforced at the layout level.
+  // Let auth callback and login through unconditionally
+  if (pathname.startsWith('/login') || pathname.startsWith('/auth')) {
     return NextResponse.next()
   }
+
+  // Check for any Supabase session cookie (sb-*-auth-token)
+  const hasSession = request.cookies.getAll().some((c) => c.name.includes('-auth-token'))
+
+  if (!hasSession) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
