@@ -14,12 +14,22 @@ async function createUser(email: string, password: string) {
   return { user_id: data.user?.id, email: data.user?.email }
 }
 
-// GET ?secret=...&email=...&password=... for tooling that only supports GET
+// GET ?secret=...&email=...&password=...
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   if (searchParams.get('secret') !== SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  // Debug mode: just check env vars
+  if (searchParams.get('debug') === '1') {
+    return NextResponse.json({
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'set' : 'MISSING',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'set' : 'MISSING',
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'set' : 'MISSING',
+    })
+  }
+
   const email = searchParams.get('email')
   const password = searchParams.get('password')
   if (!email || !password) {
