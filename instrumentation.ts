@@ -159,8 +159,13 @@ export async function register() {
     )
 
     const today = new Date().toISOString().split('T')[0]
-    await db.from('briefs').upsert(
-      {
+    const { data: existingBrief } = await db
+      .from('briefs')
+      .select('id')
+      .eq('brief_date', today)
+      .limit(1)
+    if (!existingBrief || existingBrief.length === 0) {
+      await db.from('briefs').insert({
         brief_type: 'daily',
         brief_date: today,
         title: `Daily Brief — ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
@@ -179,23 +184,74 @@ export async function register() {
         generated_at: new Date().toISOString(),
         objects_processed: 142,
         is_valid: true,
-      },
-      { onConflict: 'brief_date' }
-    )
+      })
+    }
 
-    await db.from('objects').insert(
-      GHOST_NOTES.map(g => ({
-        object_type: 'ghost_note',
-        name: g.inference_basis.slice(0, 80),
-        description: g.inference_basis,
-        status: 'active',
-        confidence_score: g.confidence_score,
-        metadata: {
-          inference_basis: g.inference_basis,
-          confidence: g.confidence,
+    const { data: existingGhosts } = await db
+      .from('objects')
+      .select('id')
+      .eq('object_type', 'ghost_note')
+      .limit(1)
+    if (!existingGhosts || existingGhosts.length === 0) {
+      await db.from('objects').insert(
+        GHOST_NOTES.map(g => ({
+          object_type: 'ghost_note',
+          name: g.inference_basis.slice(0, 80),
+          description: g.inference_basis,
+          status: 'active',
+          confidence_score: g.confidence_score,
+          metadata: {
+            inference_basis: g.inference_basis,
+            confidence: g.confidence,
+          },
+        }))
+      )
+    }
+
+    // Seed provenance events so Activity Feed shows meaningful content
+    const { data: existingEvents } = await db
+      .from('provenance_events')
+      .select('id')
+      .limit(1)
+    if (!existingEvents || existingEvents.length === 0) {
+      await db.from('provenance_events').insert([
+        {
+          event_type: 'CREATED',
+          actor_name: 'System',
+          actor_type: 'agent',
+          summary: 'Daily brief generated for ' + today,
+          source_system: 'brief',
         },
-      }))
-    )
+        {
+          event_type: 'CREATED',
+          actor_name: 'RAI Monitor',
+          actor_type: 'agent',
+          summary: 'Org health snapshot computed — RAI at 72',
+          source_system: 'metrics',
+        },
+        {
+          event_type: 'CREATED',
+          actor_name: 'Ghost Detector',
+          actor_type: 'agent',
+          summary: '4 knowledge gaps detected in decision corpus',
+          source_system: 'ghost_note',
+        },
+        {
+          event_type: 'UPDATED',
+          actor_name: 'Scoring Runner',
+          actor_type: 'agent',
+          summary: 'Decision quality score updated to 81 (+5)',
+          source_system: 'metrics',
+        },
+        {
+          event_type: 'CREATED',
+          actor_name: 'System',
+          actor_type: 'agent',
+          summary: 'FDA 510(k) gap analysis flagged as critical focus item',
+          source_system: 'brief',
+        },
+      ])
+    }
   } catch {
     // Non-fatal: instrumentation errors must not crash the server
   }

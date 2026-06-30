@@ -51,7 +51,14 @@ export default async function TodayPage() {
     color: (m.metadata as any)?.color ?? '#6B7280',
   }))
 
-  const provenanceEvents = eventsResult.data ?? []
+  const provenanceEvents = ((eventsResult.data ?? []) as any[]).map((e: any) => ({
+    id: e.id,
+    event_type: (e.event_type ?? 'CREATED').toUpperCase(),
+    actor: e.actor_name ?? e.actor_type ?? 'System',
+    object_name: e.summary ?? 'object',
+    object_type: e.source_system ?? 'system',
+    created_at: e.created_at,
+  }))
 
   const ghostNotes = ((ghostNotesResult.data ?? []) as any[]).map((obj: any) => ({
     id: obj.id,

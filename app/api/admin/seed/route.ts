@@ -148,30 +148,32 @@ export async function POST() {
     return NextResponse.json({ error: 'metrics: ' + metricsError.message }, { status: 500 })
   }
 
-  // Seed daily brief
+  // Seed daily brief (check first to avoid duplicate conflict)
   const today = new Date().toISOString().split('T')[0]
-  const { error: briefError } = await db.from('briefs').upsert({
-    brief_type: 'daily',
-    brief_date: today,
-    title: `Daily Brief — ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
-    summary: 'Strong execution momentum with 3 tasks at critical priority. Evidence health requires immediate attention — 4 claims flagged as unsupported. Decision quality trending up following DECIDE-002 outcome review.',
-    focus_items: FOCUS_ITEMS,
-    org_health_snapshot: {
-      rai: 72,
-      evidence_health: 54,
-      decision_quality: 81,
-      assumption_risk: 43,
-      unknown_burden: 63,
-      execution_velocity: 77,
-    },
-    generated_by: 'brief_generator_agent',
-    generated_at: new Date().toISOString(),
-    objects_processed: 142,
-    is_valid: true,
-  }, { onConflict: 'brief_date' })
-
-  if (briefError) {
-    return NextResponse.json({ error: 'briefs: ' + briefError.message }, { status: 500 })
+  const { data: existingBrief } = await db.from('briefs').select('id').eq('brief_date', today).limit(1)
+  if (!existingBrief || existingBrief.length === 0) {
+    const { error: briefError } = await db.from('briefs').insert({
+      brief_type: 'daily',
+      brief_date: today,
+      title: `Daily Brief — ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
+      summary: 'Strong execution momentum with 3 tasks at critical priority. Evidence health requires immediate attention — 4 claims flagged as unsupported. Decision quality trending up following DECIDE-002 outcome review.',
+      focus_items: FOCUS_ITEMS,
+      org_health_snapshot: {
+        rai: 72,
+        evidence_health: 54,
+        decision_quality: 81,
+        assumption_risk: 43,
+        unknown_burden: 63,
+        execution_velocity: 77,
+      },
+      generated_by: 'brief_generator_agent',
+      generated_at: new Date().toISOString(),
+      objects_processed: 142,
+      is_valid: true,
+    })
+    if (briefError) {
+      return NextResponse.json({ error: 'briefs: ' + briefError.message }, { status: 500 })
+    }
   }
 
   // Seed ghost notes as objects
