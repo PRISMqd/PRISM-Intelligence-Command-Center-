@@ -119,6 +119,10 @@ const GHOST_NOTES = [
   },
 ]
 
+export async function GET() {
+  return POST()
+}
+
 export async function POST() {
   const supabase = createServiceClient()
 
