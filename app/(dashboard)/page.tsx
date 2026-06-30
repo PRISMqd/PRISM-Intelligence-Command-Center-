@@ -33,7 +33,7 @@ export default async function TodayPage() {
         .order('created_at', { ascending: false }),
     ])
 
-  const briefRaw = briefResult.data ?? null
+  const briefRaw = (briefResult.data ?? null) as any
   const brief = briefRaw ? {
     id: briefRaw.id,
     date: briefRaw.brief_date,
@@ -41,7 +41,7 @@ export default async function TodayPage() {
     focus_items: briefRaw.focus_items ?? [],
   } : null
 
-  const orgHealthMetrics: OrgHealthDimension[] = (metricsResult.data ?? []).map((m: any) => ({
+  const orgHealthMetrics: OrgHealthDimension[] = ((metricsResult.data ?? []) as any[]).map((m: any) => ({
     key: m.dimension ?? m.metric_name,
     label: m.metric_name,
     score: m.value,
@@ -53,7 +53,7 @@ export default async function TodayPage() {
 
   const provenanceEvents = eventsResult.data ?? []
 
-  const ghostNotes = (ghostNotesResult.data ?? []).map((obj: any) => ({
+  const ghostNotes = ((ghostNotesResult.data ?? []) as any[]).map((obj: any) => ({
     id: obj.id,
     inference_basis: (obj.metadata as any)?.inference_basis ?? obj.description ?? obj.name,
     confidence: (obj.metadata as any)?.confidence ?? (
