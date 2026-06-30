@@ -137,14 +137,16 @@ export async function POST() {
     unit: 'score',
   }))
 
-  const { error: metricsError } = await supabase.from('metrics').insert(metricsToInsert as any[])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  const { error: metricsError } = await db.from('metrics').insert(metricsToInsert)
   if (metricsError) {
     return NextResponse.json({ error: 'metrics: ' + metricsError.message }, { status: 500 })
   }
 
   // Seed daily brief
   const today = new Date().toISOString().split('T')[0]
-  const { error: briefError } = await supabase.from('briefs').upsert({
+  const { error: briefError } = await db.from('briefs').upsert({
     brief_type: 'daily',
     brief_date: today,
     title: `Daily Brief — ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
@@ -181,7 +183,7 @@ export async function POST() {
     },
   }))
 
-  const { error: ghostError } = await supabase.from('objects').insert(ghostObjects)
+  const { error: ghostError } = await db.from('objects').insert(ghostObjects)
   if (ghostError) {
     return NextResponse.json({ error: 'ghost_notes: ' + ghostError.message }, { status: 500 })
   }
