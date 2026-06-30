@@ -5,8 +5,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Let auth callback and login through unconditionally
-  if (pathname.startsWith('/login') || pathname.startsWith('/auth')) {
+  // Let auth callback, login, and API routes through unconditionally
+  if (pathname.startsWith('/login') || pathname.startsWith('/auth') || pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
 
