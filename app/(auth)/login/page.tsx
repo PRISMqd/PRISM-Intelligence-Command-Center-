@@ -31,13 +31,22 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
-    if (error) {
-      setError(error.message)
-    } else {
-      router.push('/')
+    try {
+      const res = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Sign in failed')
+      } else {
+        router.push('/')
+      }
+    } catch {
+      setError('Network error — please try again')
+    } finally {
+      setLoading(false)
     }
   }
 
