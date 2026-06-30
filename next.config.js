@@ -2,6 +2,7 @@
 const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: [],
+    instrumentationHook: true,
   },
 }
 module.exports = nextConfig
