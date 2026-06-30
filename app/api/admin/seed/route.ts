@@ -137,7 +137,7 @@ export async function POST() {
     unit: 'score',
   }))
 
-  const { error: metricsError } = await supabase.from('metrics').insert(metricsToInsert)
+  const { error: metricsError } = await supabase.from('metrics').insert(metricsToInsert as any[])
   if (metricsError) {
     return NextResponse.json({ error: 'metrics: ' + metricsError.message }, { status: 500 })
   }
