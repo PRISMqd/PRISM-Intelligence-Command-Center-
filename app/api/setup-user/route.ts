@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase-server'
+import { createClient } from '@supabase/supabase-js'
 
 const SECRET = 'prism-setup-2026-icc'
 
+// URL known from project config; only SUPABASE_SERVICE_ROLE_KEY needed at runtime
+const SUPABASE_URL = 'https://rmbjqyidvuvnnzirglpj.supabase.co'
+
 async function createUser(email: string, password: string) {
-  const supabase = createServiceClient()
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) return { error: 'SUPABASE_SERVICE_ROLE_KEY not set' }
+  const supabase = createClient(SUPABASE_URL, serviceKey)
   const { data, error } = await supabase.auth.admin.createUser({
     email,
     password,
@@ -14,14 +19,12 @@ async function createUser(email: string, password: string) {
   return { user_id: data.user?.id, email: data.user?.email }
 }
 
-// GET ?secret=...&email=...&password=...
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   if (searchParams.get('secret') !== SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Debug mode: just check env vars
   if (searchParams.get('debug') === '1') {
     return NextResponse.json({
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'set' : 'MISSING',
@@ -32,19 +35,6 @@ export async function GET(request: Request) {
 
   const email = searchParams.get('email')
   const password = searchParams.get('password')
-  if (!email || !password) {
-    return NextResponse.json({ error: 'email and password required' }, { status: 400 })
-  }
-  const result = await createUser(email, password)
-  return NextResponse.json(result, { status: 'error' in result ? 400 : 200 })
-}
-
-export async function POST(request: Request) {
-  const secret = request.headers.get('x-setup-secret')
-  if (secret !== SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  const { email, password } = await request.json()
   if (!email || !password) {
     return NextResponse.json({ error: 'email and password required' }, { status: 400 })
   }
