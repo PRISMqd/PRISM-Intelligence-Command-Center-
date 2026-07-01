@@ -39,10 +39,12 @@ const CANON_AGENTS = [
 ]
 
 async function ensureCanonAgentsRegistered(db: any) {
-  const { data: existing } = await db.from('agents').select('name').in(
-    'name',
-    CANON_AGENTS.map((a) => a.name)
-  )
+  const { data: existing, error: selectError } = await db
+    .from('agents')
+    .select('name')
+    .in('name', CANON_AGENTS.map((a) => a.name))
+  if (selectError) return { error: `select: ${selectError.message}` }
+
   const existingNames = new Set((existing ?? []).map((a: any) => a.name))
   const toInsert = CANON_AGENTS.filter((a) => !existingNames.has(a.name)).map((a) => ({
     ...a,
@@ -51,8 +53,10 @@ async function ensureCanonAgentsRegistered(db: any) {
     total_runs: 0,
   }))
   if (toInsert.length > 0) {
-    await db.from('agents').insert(toInsert)
+    const { error: insertError } = await db.from('agents').insert(toInsert)
+    if (insertError) return { error: `insert: ${insertError.message}`, attempted: toInsert.map((a) => a.name) }
   }
+  return { inserted: toInsert.map((a) => a.name) }
 }
 
 function clamp(n: number, min = 0, max = 100) {
@@ -214,7 +218,7 @@ export async function GET(request: NextRequest) {
   const db = supabase as any
   const now = new Date().toISOString()
 
-  await ensureCanonAgentsRegistered(db)
+  const registration = await ensureCanonAgentsRegistered(db)
 
   const { data: agents, error: agentsError } = await db.from('agents').select('*')
   if (agentsError) {
@@ -274,5 +278,5 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, ran_at: now, results })
+  return NextResponse.json({ ok: true, ran_at: now, registration, results })
 }
