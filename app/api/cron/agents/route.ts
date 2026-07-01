@@ -225,13 +225,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: agentsError.message }, { status: 500 })
   }
 
+  const force = request.nextUrl.searchParams.get('force') === '1'
   const results: Record<string, string> = {}
 
   for (const agent of agents ?? []) {
     const runner = RUNNERS[agent.name]
     if (!runner) continue
 
-    const dueNow = !agent.next_run_at || new Date(agent.next_run_at) <= new Date(now)
+    const dueNow = force || !agent.next_run_at || new Date(agent.next_run_at) <= new Date(now)
     if (!dueNow) {
       results[agent.name] = 'not due yet'
       continue
