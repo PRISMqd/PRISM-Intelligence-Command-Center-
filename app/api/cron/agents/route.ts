@@ -3,6 +3,9 @@ import { createServiceClient } from '@/lib/supabase-server'
 import { runCanonAgent } from '@/lib/agents/canon'
 import { runAletheiaAgent } from '@/lib/agents/aletheia'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Vercel Hobby plan invokes crons at most once/day, so each agent's "next_run_at"
 // is honored on a best-effort basis: any agent whose next_run_at has passed runs
 // on this invocation, then is rescheduled per its own cadence.

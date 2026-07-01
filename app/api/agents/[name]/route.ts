@@ -3,6 +3,9 @@ import { createServiceClient } from '@/lib/supabase-server'
 import { CANON_CAPABILITY, CANON_KNOWLEDGE } from '@/lib/agents/canon'
 import { ALETHEIA_CAPABILITY, ALETHEIA_KNOWLEDGE } from '@/lib/agents/aletheia'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Canon Vol III 3.15: every agent must expose Capability, Knowledge, and
 // Reasoning as inspectable interfaces. This route is that inspection surface.
 const INTERFACES: Record<string, { capability: string[]; knowledge: string[] }> = {
