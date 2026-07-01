@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
+import { runCanonAgent } from '@/lib/agents/canon'
+import { runAletheiaAgent } from '@/lib/agents/aletheia'
 
 // Vercel Hobby plan invokes crons at most once/day, so each agent's "next_run_at"
 // is honored on a best-effort basis: any agent whose next_run_at has passed runs
@@ -10,6 +12,44 @@ const INTERVAL_MS: Record<string, number> = {
   'Reality Reconciler': 24 * 60 * 60 * 1000, // nightly
   'Ghost Note Detector': 7 * 24 * 60 * 60 * 1000, // weekly
   'RAI Monitor': 6 * 60 * 60 * 1000, // every 6h
+  'Canon': 24 * 60 * 60 * 1000, // daily — EA-003, Executive Layer
+  'Aletheia': 24 * 60 * 60 * 1000, // daily — EA-025, Enterprise Cognition
+}
+
+// Canon agents registered in the `agents` table so the cron runner can find
+// and execute them. Idempotent: only inserted if not already present.
+const CANON_AGENTS = [
+  {
+    name: 'Canon',
+    agent_type: 'executive',
+    description:
+      'EA-003. Maintains the organizational knowledge graph: provenance chain integrity, ontology governance, Decision Registry maintenance, knowledge drift monitoring. Flags Canon invariant violations; does not resolve them unilaterally.',
+    schedule: '0 3 * * *',
+  },
+  {
+    name: 'Aletheia',
+    agent_type: 'enterprise_cognition',
+    description:
+      'EA-025. Maintains logical and evidential coherence of the knowledge graph: contradiction detection, knowledge drift, provenance chain verification, deprecated-object monitoring. Authority: flag and escalate only — no resolution authority.',
+    schedule: '0 5 * * *',
+  },
+]
+
+async function ensureCanonAgentsRegistered(db: any) {
+  const { data: existing } = await db.from('agents').select('name').in(
+    'name',
+    CANON_AGENTS.map((a) => a.name)
+  )
+  const existingNames = new Set((existing ?? []).map((a: any) => a.name))
+  const toInsert = CANON_AGENTS.filter((a) => !existingNames.has(a.name)).map((a) => ({
+    ...a,
+    status: 'active',
+    is_system_agent: true,
+    total_runs: 0,
+  }))
+  if (toInsert.length > 0) {
+    await db.from('agents').insert(toInsert)
+  }
 }
 
 function clamp(n: number, min = 0, max = 100) {
@@ -154,6 +194,8 @@ const RUNNERS: Record<string, (db: any, now: string) => Promise<string>> = {
   'Reality Reconciler': runRealityReconciler,
   'Ghost Note Detector': runGhostNoteDetector,
   'RAI Monitor': runRaiMonitor,
+  'Canon': runCanonAgent,
+  'Aletheia': runAletheiaAgent,
 }
 
 export async function GET(request: NextRequest) {
@@ -168,6 +210,8 @@ export async function GET(request: NextRequest) {
   const supabase = createServiceClient()
   const db = supabase as any
   const now = new Date().toISOString()
+
+  await ensureCanonAgentsRegistered(db)
 
   const { data: agents, error: agentsError } = await db.from('agents').select('*')
   if (agentsError) {
