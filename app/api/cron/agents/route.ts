@@ -48,7 +48,7 @@ async function ensureCanonAgentsRegistered(db: any) {
   const existingNames = new Set((existing ?? []).map((a: any) => a.name))
   const toInsert = CANON_AGENTS.filter((a) => !existingNames.has(a.name)).map((a) => ({
     ...a,
-    status: 'active',
+    status: 'idle',
     is_system_agent: true,
     total_runs: 0,
   }))
