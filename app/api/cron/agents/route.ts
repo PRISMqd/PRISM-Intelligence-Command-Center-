@@ -254,7 +254,7 @@ export async function GET(request: NextRequest) {
         })
         .eq('id', agent.id)
 
-      await db.from('provenance_events').insert({
+      const { error: eventError } = await db.from('provenance_events').insert({
         event_type: 'UPDATED',
         actor_name: agent.name,
         actor_type: 'agent',
@@ -263,7 +263,7 @@ export async function GET(request: NextRequest) {
         created_at: now,
       })
 
-      results[agent.name] = summary
+      results[agent.name] = eventError ? `${summary} [event log failed: ${eventError.message}]` : summary
     } catch (err: any) {
       await db
         .from('agents')
