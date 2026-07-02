@@ -205,6 +205,33 @@ const RUNNERS: Record<string, (db: any, now: string) => Promise<string>> = {
   'Aletheia': runAletheiaAgent,
 }
 
+// provenance_events.object_id is NOT NULL, but agent-run events describe
+// system activity, not a specific knowledge object. Route them through a
+// singleton system object rather than violate the constraint.
+async function getOrCreateSystemObjectId(db: any, now: string) {
+  const { data: existing } = await db
+    .from('objects')
+    .select('id')
+    .eq('object_type', 'system')
+    .eq('name', 'Agent Runtime')
+    .maybeSingle()
+  if (existing) return existing.id
+
+  const { data: created, error } = await db
+    .from('objects')
+    .insert({
+      object_type: 'system',
+      name: 'Agent Runtime',
+      description: 'Singleton subject for system-level provenance events (agent execution logs) that are not about a specific knowledge object.',
+      status: 'active',
+      created_at: now,
+    })
+    .select('id')
+    .single()
+  if (error) return null
+  return created.id
+}
+
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET
   if (cronSecret) {
@@ -219,6 +246,7 @@ export async function GET(request: NextRequest) {
   const now = new Date().toISOString()
 
   const registration = await ensureCanonAgentsRegistered(db)
+  const systemObjectId = await getOrCreateSystemObjectId(db, now)
 
   const { data: agents, error: agentsError } = await db.from('agents').select('*')
   if (agentsError) {
@@ -256,6 +284,7 @@ export async function GET(request: NextRequest) {
         .eq('id', agent.id)
 
       const { error: eventError } = await db.from('provenance_events').insert({
+        object_id: systemObjectId,
         event_type: 'UPDATED',
         actor_name: agent.name,
         actor_type: 'agent',
@@ -279,5 +308,5 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, ran_at: now, registration, results })
+  return NextResponse.json({ ok: true, ran_at: now, registration, systemObjectId, results })
 }
