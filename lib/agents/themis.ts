@@ -5,11 +5,11 @@
 // Capability / Knowledge / Reasoning as inspectable interfaces, not just act.
 
 export const THEMIS_CAPABILITY = [
-  'Review every agent output's beneficiary accountability fields per CA-003 Section 4.7 (who benefits, who bears risk, who is excluded, who was not at the table)',
-  'Assess evidence bases for structural representation and identify structurally inherited assumptions in any agent's reasoning',
+    "Review every agent output's beneficiary accountability fields per CA-003 Section 4.7 (who benefits, who bears risk, who is excluded, who was not at the table)",
+    "Assess evidence bases for structural representation and identify structurally inherited assumptions in any agent's reasoning",
   'Map power asymmetries in organizational relationships, partnerships, and vendor contracts',
   'Issue equity audit certificates or deficiency flags; escalate deficiencies to human governance with a remediation proposal — Themis flags, it does not resolve unilaterally',
-  'Conduct and publish self-audit of Themis's own outputs against the same equity standards applied to all other agents',
+    "Conduct and publish self-audit of Themis's own outputs against the same equity standards applied to all other agents",
 ]
 
 export const THEMIS_KNOWLEDGE = [
