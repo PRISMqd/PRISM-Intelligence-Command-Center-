@@ -1,4 +1,4 @@
-—// Agent EA-19: Metis — 
+// Agent EA-19: Metis — 
 // Spec source: PRISM Canon Book I Volume VII Chapter 3; Volume VIII Chapter 6; Volume IX Chapter 5
 //
 // Constitutional requirement (Canon Vol III 3.15): every agent must expose
