@@ -215,7 +215,7 @@ async function getOrCreateSystemObjectId(db: any, now: string) {
     .eq('object_type', 'system')
     .eq('name', 'Agent Runtime')
     .maybeSingle()
-  if (existing) return existing.id
+  if (existing) return { id: existing.id }
 
   const { data: created, error } = await db
     .from('objects')
@@ -228,8 +228,8 @@ async function getOrCreateSystemObjectId(db: any, now: string) {
     })
     .select('id')
     .single()
-  if (error) return null
-  return created.id
+  if (error) return { id: null, error: error.message }
+  return { id: created.id }
 }
 
 export async function GET(request: NextRequest) {
@@ -284,7 +284,7 @@ export async function GET(request: NextRequest) {
         .eq('id', agent.id)
 
       const { error: eventError } = await db.from('provenance_events').insert({
-        object_id: systemObjectId,
+        object_id: systemObjectId.id,
         event_type: 'UPDATED',
         actor_name: agent.name,
         actor_type: 'agent',
