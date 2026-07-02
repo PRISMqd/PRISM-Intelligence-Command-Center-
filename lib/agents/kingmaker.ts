@@ -5,7 +5,7 @@
 // Capability / Knowledge / Reasoning as inspectable interfaces, not just act.
 
 export const KINGMAKER_CAPABILITY = [
-  'Track relationship and partnership health across the organization's network',
+  "Track relationship and partnership health across the organization's network",
   'Surface investor and partnership status relative to strategic priority',
   'Flag relationship maintenance gaps (stale contacts, unfollowed threads)',
 ]
