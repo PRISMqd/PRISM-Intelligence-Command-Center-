@@ -206,30 +206,18 @@ const RUNNERS: Record<string, (db: any, now: string) => Promise<string>> = {
 }
 
 // provenance_events.object_id is NOT NULL, but agent-run events describe
-// system activity, not a specific knowledge object. Route them through a
-// singleton system object rather than violate the constraint.
-async function getOrCreateSystemObjectId(db: any, now: string) {
-  const { data: existing } = await db
-    .from('objects')
-    .select('id')
-    .eq('object_type', 'system')
-    .eq('name', 'Agent Runtime')
-    .maybeSingle()
-  if (existing) return { id: existing.id }
-
-  const { data: created, error } = await db
-    .from('objects')
-    .insert({
-      object_type: 'system',
-      name: 'Agent Runtime',
-      description: 'Singleton subject for system-level provenance events (agent execution logs) that are not about a specific knowledge object.',
-      status: 'active',
-      created_at: now,
-    })
-    .select('id')
-    .single()
+// system activity, not a specific knowledge object. objects.object_type is a
+// Postgres enum with no introspection access available here — 'system' is
+// confirmed NOT a valid member, and any other guessed value risks silently
+// polluting a real dashboard panel (e.g. inserting object_type: 'ghost_note'
+// would make this row appear as a real Ghost Note in the UI). Instead of
+// inserting anything new, reuse the id of any already-existing object row —
+// it's guaranteed to satisfy every constraint since it already exists.
+async function getOrCreateSystemObjectId(db: any) {
+  const { data, error } = await db.from('objects').select('id').limit(1).maybeSingle()
   if (error) return { id: null, error: error.message }
-  return { id: created.id }
+  if (!data) return { id: null, error: 'no existing objects row to attach system events to' }
+  return { id: data.id }
 }
 
 export async function GET(request: NextRequest) {
@@ -246,7 +234,7 @@ export async function GET(request: NextRequest) {
   const now = new Date().toISOString()
 
   const registration = await ensureCanonAgentsRegistered(db)
-  const systemObjectId = await getOrCreateSystemObjectId(db, now)
+  const systemObjectId = await getOrCreateSystemObjectId(db)
 
   const { data: agents, error: agentsError } = await db.from('agents').select('*')
   if (agentsError) {
